@@ -1,8 +1,1 @@
-{
-  "name": "wallet-verifier",
-  "version": "1.0.0",
-  "dependencies": {
-    "@sparticuz/chromium": "^111.0.0",
-    "puppeteer-core": "^19.11.1"
-  }
-}
+{"dependencies":{"@sparticuz/chromium":"^111.0.0","puppeteer-core":"^19.11.1"}}

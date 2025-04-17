@@ -2,6 +2,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
+  const resultBox = document.getElementById('result');
+
+  resultBox.innerText = "Verifying...";
 
   const res = await fetch('/.netlify/functions/wallet-check-final', {
     method: 'POST',
@@ -10,5 +13,5 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   });
 
   const result = await res.json();
-  document.getElementById('result').innerText = result.wallet || result.error || 'Unknown response';
+  resultBox.innerText = result.wallet || result.error || "Unknown response.";
 });
