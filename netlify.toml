@@ -2,10 +2,13 @@
   node_bundler = "esbuild"
   external_node_modules = ["puppeteer-core", "@sparticuz/chromium"]
 
+[functions."wallet-check-final"]
+  timeout = 26
+  memory = 1024
+
 [build]
   command = "npm install"
   publish = "./"
 
 [build.environment]
   NODE_VERSION = "18"
-
