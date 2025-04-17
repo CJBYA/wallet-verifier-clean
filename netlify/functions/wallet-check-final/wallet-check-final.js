@@ -1,22 +1,18 @@
 const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
 
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
   console.log("🔥 Wallet check function triggered at:", new Date().toISOString());
 
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: 'Only POST method is allowed' }),
-    };
-  }
-
   let email, password;
+
   try {
     const data = JSON.parse(event.body || '{}');
     email = data.email;
     password = data.password;
-  } catch {
+    console.log("📩 Email received:", email);
+  } catch (err) {
+    console.error("❌ JSON parse error:", err.message);
     return {
       statusCode: 400,
       body: JSON.stringify({ error: 'Invalid JSON in request body' }),
@@ -24,6 +20,7 @@ exports.handler = async (event) => {
   }
 
   if (!email || !password) {
+    console.warn("⚠️ Missing email or password");
     return {
       statusCode: 400,
       body: JSON.stringify({ error: 'Missing email or password' }),
@@ -32,6 +29,7 @@ exports.handler = async (event) => {
 
   let browser;
   try {
+    console.log("🧪 Launching Chromium...");
     browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
@@ -39,19 +37,18 @@ exports.handler = async (event) => {
       headless: chromium.headless,
     });
 
+    console.log("🌍 Browser launched. Opening page...");
     const page = await browser.newPage();
 
-    // Step 1: Login
     await page.goto('https://www.luckyblock.top/en/login', { waitUntil: 'networkidle2' });
     await page.type('input[type=email]', email);
     await page.type('input[type=password]', password);
     await page.click('button[type=submit]');
     await page.waitForNavigation({ waitUntil: 'networkidle2' });
 
-    // Step 2: Navigate to wallet
+    console.log("🔑 Logged in, navigating to wallet...");
     await page.goto('https://www.luckyblock.top/en/profile?overlay=wallet&tab=0', { waitUntil: 'networkidle2' });
 
-    // Step 3: Find USDT ERC20 wallet address
     const wallet = await page.evaluate(() => {
       const elements = Array.from(document.querySelectorAll('*'));
       for (let el of elements) {
@@ -66,17 +63,20 @@ exports.handler = async (event) => {
     await browser.close();
 
     if (wallet) {
+      console.log("✅ Wallet found:", wallet);
       return {
         statusCode: 200,
-        body: JSON.stringify({ email, wallet }),
+        body: JSON.stringify({ wallet, email }),
       };
     } else {
+      console.warn("❌ Wallet not found");
       return {
         statusCode: 404,
         body: JSON.stringify({ error: 'Wallet not found' }),
       };
     }
   } catch (err) {
+    console.error("💥 Verification failed:", err.message);
     if (browser) await browser.close();
     return {
       statusCode: 500,
