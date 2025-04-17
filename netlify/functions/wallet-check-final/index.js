@@ -1,7 +1,5 @@
-const chromium = require('@sparticuz/chromium');
 const puppeteer = require('puppeteer-core');
-
-console.log("⚡ Function updated");
+const chromium = require('@sparticuz/chromium');
 
 exports.handler = async (event, context) => {
   console.log("🔥 Wallet check function triggered at:", new Date().toISOString());
@@ -12,18 +10,17 @@ exports.handler = async (event, context) => {
     email = data.email;
     password = data.password;
     console.log("📩 Email received:", email);
-  } catch (err) {
-    console.error("❌ Failed to parse request body:", err.message);
+  } catch {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: "Invalid request body" }),
+      body: JSON.stringify({ error: 'Invalid JSON in request body' }),
     };
   }
 
   if (!email || !password) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: "Missing email or password" }),
+      body: JSON.stringify({ error: 'Missing email or password' }),
     };
   }
 
@@ -63,20 +60,20 @@ exports.handler = async (event, context) => {
     if (wallet) {
       return {
         statusCode: 200,
-        body: JSON.stringify({ wallet }),
+        body: JSON.stringify({ wallet, email }),
       };
     } else {
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: "Wallet not found" }),
+        body: JSON.stringify({ error: 'Wallet not found' }),
       };
     }
   } catch (err) {
-    console.error("💥 Verification failed:", err.message);
     if (browser) await browser.close();
+    console.error("💥 Verification failed:", err.message);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Verification failed", details: err.message }),
+      body: JSON.stringify({ error: 'Verification failed', details: err.message }),
     };
   }
 };
