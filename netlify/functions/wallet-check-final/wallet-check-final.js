@@ -1,26 +1,40 @@
 
-import chromium from '@sparticuz/chromium';
-import puppeteer from 'puppeteer-core';
+const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 
-export default async (req, res) => {
+exports.handler = async (event, context) => {
   console.log("🔥 Wallet check function deployed at:", new Date().toISOString());
 
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: "Missing email or password" });
+  let email, password;
+  try {
+    const data = JSON.parse(event.body || '{}');
+    email = data.email;
+    password = data.password;
+  } catch {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Invalid JSON in request body' }),
+    };
   }
 
-  const browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-  });
+  if (!email || !password) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Missing email or password' }),
+    };
+  }
 
-  const page = await browser.newPage();
-
+  let browser;
   try {
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
+
+    const page = await browser.newPage();
+
     await page.goto('https://www.luckyblock.top/en/login', { waitUntil: 'networkidle2' });
     await page.type('input[type=email]', email);
     await page.type('input[type=password]', password);
@@ -43,12 +57,21 @@ export default async (req, res) => {
     await browser.close();
 
     if (wallet) {
-      return res.status(200).json({ wallet });
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ wallet, email }),
+      };
     } else {
-      return res.status(404).json({ error: "Wallet not found" });
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: 'Wallet not found' }),
+      };
     }
   } catch (err) {
-    await browser.close();
-    return res.status(500).json({ error: "Verification failed", details: err.message });
+    if (browser) await browser.close();
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Verification failed', details: err.message }),
+    };
   }
 };
