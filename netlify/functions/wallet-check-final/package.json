@@ -1,6 +1,10 @@
 {
+  "name": "wallet-check-final",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
   "dependencies": {
-    "@sparticuz/chromium": "^111.0.0",
-    "puppeteer-core": "^19.11.1"
+    "puppeteer-core": "^19.11.1",
+    "@sparticuz/chromium": "^111.0.0"
   }
 }

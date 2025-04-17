@@ -1,26 +1,26 @@
 const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
 
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   console.log("🔥 Wallet check function triggered at:", new Date().toISOString());
 
   let email, password;
   try {
-    const data = JSON.parse(event.body || '{}');
-    email = data.email;
-    password = data.password;
+    const body = JSON.parse(event.body || '{}');
+    email = body.email;
+    password = body.password;
     console.log("📩 Email received:", email);
-  } catch {
+  } catch (err) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Invalid JSON in request body' }),
+      body: JSON.stringify({ error: "Invalid JSON in request body" }),
     };
   }
 
   if (!email || !password) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Missing email or password' }),
+      body: JSON.stringify({ error: "Missing email or password" }),
     };
   }
 
@@ -35,7 +35,6 @@ exports.handler = async (event, context) => {
     });
 
     const page = await browser.newPage();
-
     await page.goto('https://www.luckyblock.top/en/login', { waitUntil: 'networkidle2' });
     await page.type('input[type=email]', email);
     await page.type('input[type=password]', password);
@@ -60,12 +59,12 @@ exports.handler = async (event, context) => {
     if (wallet) {
       return {
         statusCode: 200,
-        body: JSON.stringify({ wallet, email }),
+        body: JSON.stringify({ wallet }),
       };
     } else {
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: 'Wallet not found' }),
+        body: JSON.stringify({ error: "Wallet not found" }),
       };
     }
   } catch (err) {
@@ -73,7 +72,7 @@ exports.handler = async (event, context) => {
     console.error("💥 Verification failed:", err.message);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Verification failed', details: err.message }),
+      body: JSON.stringify({ error: "Verification failed", details: err.message }),
     };
   }
 };
